@@ -415,19 +415,13 @@ class Huffman {
 			q.add(f);
 		}
 
-		HashMap<Integer, BitSet> nodeValues = new HashMap<>();  // key, bits
+		HashMap<Integer, String> nodeValues = new HashMap<>();  // key, bits
 
 		class Local {
 			void traverseTree(HuffmanNode root, String s) {
 				if (root.left == null && root.right == null && (root.charValue != -1)) {
 					// charValue is the (int)character in the node
-					BitSet bs = new BitSet(s.length());
-					for (int i = 0; i < s.length(); i++) {
-						if (s.charAt(i) == '1') {
-							bs.set(i);
-						}
-					}
-					nodeValues.put(root.charValue, bs);
+					nodeValues.put(root.charValue, s);
 					return;
 				}
 				// if left then add "0" to the code
@@ -446,7 +440,7 @@ class Huffman {
 			BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(sourceFile)));
 //			printWriter.print((char)n);
 
-			for (int key: nodeValues.keySet()) {
+//			for (int key: nodeValues.keySet()) {
 
 //				int bitLength = nodeValues.get(key).length();
 //				int bits = Integer.parseInt(nodeValues.get(key), 2);
@@ -454,7 +448,7 @@ class Huffman {
 //				printWriter.print((char)key);
 //				printWriter.print((char)bitLength);
 //				printWriter.print((char)bits);
-			}
+//			}
 
 			String rawText = "";
 			int readValue;
