@@ -13,7 +13,7 @@ import java.util.*;
 // import java.io.*;
 
 /*
-	Benchmark, only LZ77 compresion:
+	Benchmark, only LZ77 compresion, windows results:
 	Filename             original size     compresed size   compresion 
 	Tests/File1.html         80831			    39862          2.03x
 	Tests/File2.html        346119     		   150934          2.29x
@@ -21,6 +21,33 @@ import java.util.*;
 	Tests/File4.html        208048			    98862          2.10x
 	__________________________________________________________________
 										   average compresion: 2.11x
+
+
+	Benchmark, only LZ77 compresion, MacOS results:
+	Filename             original size     compresed size   compresion 
+	Tests/File1.html         80479			    39790          2.02x
+	Tests/File2.html        344523     		   150593          2.29x
+	Tests/File3.html         83069			    41097          2.02x
+	Tests/File4.html        206694			    98613          2.10x
+	Tests/File5.html        123085			    60540          2.03x
+	Tests/File6.html        175131			    88181          1.99x
+	Tests/File7.html         80219			    43051          1,86x
+	__________________________________________________________________
+										   average compresion: 2.04x
+
+
+	Benchmark, Huffman compresion, MacOS results:
+	Filename             original size     compresed size   compresion 
+	Tests/File1.html         80479			    45762          1.76x
+	Tests/File2.html        344523     		   145640          2.37x
+	Tests/File3.html         83069			    45954          1.82x
+	Tests/File4.html        206694			    97614          2.12x
+	Tests/File5.html        123085			    63648          1.93x
+	Tests/File6.html        175131			    88487          1.98x
+	Tests/File7.html         80219			    47440          1,69x
+	__________________________________________________________________
+										   average compresion: 1.95x
+
 */
 
 
