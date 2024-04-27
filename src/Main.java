@@ -34,7 +34,7 @@ public class Main {
 		
 		loop: while (true) {
 
-			System.out.println("\n\n>> comp - compress file");
+			System.out.println("\n>> comp - compress file");
 			System.out.println(">> decomp - decompress file");
             System.out.println(">> Huffman - (test version)");
 			System.out.println(">> size - get file size");
@@ -331,6 +331,16 @@ class Huffman {
 		this.resultFile = resultFile;
 	}
 
+	/**
+	 *   Compresses LZ77 compressed file.
+	 *   In final file writes symbols in following sequence:
+	 *   	* 1 number n, represents number of different symbols in LZ77 compressed file, converted to char
+	 *    	* n different numbers in some order, converted to char
+	 *      * n numbers, shows the length of Huffman tree generated bits (usually <16), converted to char, the same order
+	 *      * bitStream of n numbers, written in chunks of 7 bits, converted to char
+	 *
+	 *      * bitStream of LZ77 compressed text, written in chunks of 7 bits, converted to char
+	 */
 	void compressFile(){
         File file = new File(sourceFile);
         if(!file.exists()) {
@@ -414,7 +424,7 @@ class Huffman {
 			// add this node to the priority-queue.
 			q.add(f);
 		}
-
+ 	
 		HashMap<Integer, String> nodeValues = new HashMap<>();  // key, bits
 
 		class Local {
@@ -438,38 +448,65 @@ class Huffman {
 		try{
             PrintWriter printWriter = new PrintWriter(new FileWriter(resultFile));
 			BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(sourceFile)));
-//			printWriter.print((char)n);
+			printWriter.print((char)n);
 
-//			for (int key: nodeValues.keySet()) {
+			for (int key: nodeValues.keySet()) {
+				printWriter.print((char)key);
+			}
 
-//				int bitLength = nodeValues.get(key).length();
-//				int bits = Integer.parseInt(nodeValues.get(key), 2);
+			for (int key: nodeValues.keySet()) {
+				int bitLength = nodeValues.get(key).length();
+				printWriter.print((char)bitLength);
+			}
 
-//				printWriter.print((char)key);
-//				printWriter.print((char)bitLength);
-//				printWriter.print((char)bits);
-//			}
+			String allBits = "";
+			int NUMBER_OF_BITS = 7;
+
+			for (int key: nodeValues.keySet()) {
+				allBits = allBits + nodeValues.get(key);
+				while (allBits.length() > NUMBER_OF_BITS-1){
+					for (int i=0; i<=NUMBER_OF_BITS-1; i+=NUMBER_OF_BITS) {
+						String bits = allBits.substring(i, i+NUMBER_OF_BITS);
+						int bitsInt = Integer.parseInt(bits, 2);
+//						System.out.println(substringInt);
+						printWriter.print((char)(bitsInt));
+					}
+					allBits = allBits.substring(NUMBER_OF_BITS);
+
+				}
+			}
+			if (!allBits.isEmpty()){
+				System.out.print(allBits.length());
+				int bitsInt = Integer.parseInt(allBits, 2);
+//						System.out.println(substringInt);
+				printWriter.print((char)(bitsInt));
+			}
 
 			String rawText = "";
 			int readValue;
+
 
 			while((readValue = bufferedReader.read()) != -1)
 			{
 				rawText = rawText + nodeValues.get(readValue);
 
-				if (rawText.length() > 255){
-					for (int i=0; i<=255; i+=16) {
-						String substring = rawText.substring(i, i+16);
+				if (rawText.length() > NUMBER_OF_BITS-1){
+					for (int i=0; i<=NUMBER_OF_BITS-1; i+=NUMBER_OF_BITS) {
+						String substring = rawText.substring(i, i+NUMBER_OF_BITS);
 						int substringInt = Integer.parseInt(substring, 2);
-						printWriter.print((char)substringInt);
+//						System.out.println(substringInt);
+						printWriter.print((char)(substringInt));
 					}
-					rawText = rawText.substring(256);
+					rawText = rawText.substring(NUMBER_OF_BITS);
+//					printWriter.close();
+//					bufferedReader.close();
+//					return;
 				}
 			}
 
-			for (int i=0; i<rawText.length(); i+=16) {
+			for (int i=0; i<rawText.length(); i+=NUMBER_OF_BITS) {
  					try{
- 						String substring = rawText.substring(i, i+16);
+ 						String substring = rawText.substring(i, i+NUMBER_OF_BITS);
  						printWriter.print((char)Integer.parseInt(substring, 2));
  					}
  					catch (StringIndexOutOfBoundsException e) {
@@ -485,9 +522,7 @@ class Huffman {
 			System.out.println("Error in printWriter!");
 		}
 
-
 	}
-
 
 
 	void decompressFile(){}
@@ -505,4 +540,4 @@ class MyComparator implements Comparator<HuffmanNode> {
 	public int compare(HuffmanNode x, HuffmanNode y) { 
 		return x.frequency - y.frequency;
 	} 
-} 
+}
