@@ -148,6 +148,27 @@ public class Main {
 	}
 }
 
+/**		Comresses original file using LZ77 algorythm idea
+ *		Read ahead and search buffer are set to 2047 for efficiency
+ *
+ *		Result file consists of sequences of 3 characters:
+ *			how many charaters back in search buffer is the beginning of sequence of characters,
+ *			the length of the sequence of character,
+ *			and the next character after this sequence
+ *
+ *		The algorythm works as follows:
+ *			It reads in characters from the file until the read ahead buffer is filled (2047 characters) or till the end of the file
+ *			Then it reads the character from read ahead buffer and adds it to string
+ *			It then looks if such string exists in search buffer:
+ *				if it does, it reads next character from read ahead buffer and if exists in search buffer check is repeated
+ *				if not - it saves the data explained previous section in result file
+ *
+ *			It then adds the string to search buffer
+ *			If search buffer is bigger than 2047 by the end of previous action:
+ *				it removes the the oldest characters put in it until it is 2047 in size
+ *			This action is continued until the end of the file or till the read ahead buffer is empty
+ */
+
 class LZ77 {
 	String sourceFile;
 	String resultFile;
