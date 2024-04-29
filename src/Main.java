@@ -379,7 +379,8 @@ class Huffman {
 		this.resultFile = resultFile;
 	}
 
-	/**
+	/**  Update: converts every number to 16 bit integer, splits in two numbers, each with length 8, and writes them seperately
+	 *
 	 *   Compresses LZ77 compressed file.
 	 *   In final file writes symbols in following sequence:
 	 *   	* 1 number n, represents number of different symbols in LZ77 compressed file, converted to char
@@ -405,10 +406,30 @@ class Huffman {
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(sourceFile)));
             int readValue, counter = 0;
             while((readValue = bufferedReader.read()) != -1) {
-				if (letterFrequency.get(readValue) == null){
-					letterFrequency.put(readValue, 1);
+
+                String mystr = Integer.toBinaryString(readValue), tempnew = "";
+                for(int hz = 0; hz < 16-mystr.length(); hz++) {
+                        tempnew += "0";
+				}
+
+                tempnew += mystr;
+
+                String substring1 = tempnew.substring(0, 8);
+				String substring2 = tempnew.substring(8);
+
+				int substring1Int = Integer.parseInt(substring1, 2);
+				int substring2Int = Integer.parseInt(substring2, 2);
+
+				if (letterFrequency.get(substring1Int) == null){
+					letterFrequency.put(substring1Int, 1);
 				} else {
-					letterFrequency.put(readValue, letterFrequency.get(readValue) + 1);
+					letterFrequency.put(substring1Int, letterFrequency.get(substring1Int) + 1);
+				}
+
+				if (letterFrequency.get(substring2Int) == null){
+					letterFrequency.put(substring2Int, 1);
+				} else {
+					letterFrequency.put(substring2Int, letterFrequency.get(substring2Int) + 1);
 				}
             }
             bufferedReader.close();
@@ -536,7 +557,21 @@ class Huffman {
 
 			while((readValue = bufferedReader.read()) != -1)
 			{
-				rawText = rawText + nodeValues.get(readValue);
+				String mystr = Integer.toBinaryString(readValue), tempnew = "";
+				for(int hz = 0; hz < 16-mystr.length(); hz++) {
+					tempnew += "0";
+				}
+
+				tempnew += mystr;
+
+				String substring1 = tempnew.substring(0, 8);
+				String substring2 = tempnew.substring(8);
+
+				int substring1Int = Integer.parseInt(substring1, 2);
+				int substring2Int = Integer.parseInt(substring2, 2);
+
+				rawText = rawText + nodeValues.get(substring1Int);
+				rawText = rawText + nodeValues.get(substring2Int);
 
 				if (rawText.length() > NUMBER_OF_BITS-1){
 					for (int i=0; i<=NUMBER_OF_BITS-1; i+=NUMBER_OF_BITS) {
