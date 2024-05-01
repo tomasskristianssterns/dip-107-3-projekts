@@ -2,13 +2,7 @@
 // 231RDB331 Petr Gabuniia
 // 231RDB008 Valentīns Koposovs
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.util.*;
 // import java.io.*;
 
@@ -379,62 +373,40 @@ class Huffman {
 		this.resultFile = resultFile;
 	}
 
-	/**  Update: converts every number to 16 bit integer, splits in two numbers, each with length 8, and writes them seperately
-	 *
+	/**
 	 *   Compresses LZ77 compressed file.
 	 *   In final file writes symbols in following sequence:
-	 *   	* 1 number n, represents number of different symbols in LZ77 compressed file, converted to char
-	 *    	* n different numbers in some order, converted to char
-	 *      * n numbers, shows the length of Huffman tree generated bits (usually <16), converted to char, the same order
-	 *      * bitStream of n numbers, written in chunks of 7 bits, converted to char
-	 *
-	 *      * bitStream of LZ77 compressed text, written in chunks of 7 bits, converted to char
+	 *   	* 1 number n, represents number of different symbols in LZ77 compressed file
+	 *   	* n triplets (value, bit length, prefix: base 2 converted to base 10)
+
+	 *      * byteRead of bytes using @param sourceFile
+	 *      * written in @param resultFile
 	 */
-	void compressFile(){
-        File file = new File(sourceFile);
-        if(!file.exists()) {
-            System.out.println("File not found!");
-            return;
-        }
+	void compressFile() {
+		File file = new File(sourceFile);
+		if (!file.exists()) {
+			System.out.println("File not found!");
+			return;
+		}
 
-        String searchBuff = "", temp = "";
-        int sequenceLocation, lastLocation = -1, MAX_READ_AMOUNT = 4000, MAX_SEARCH_BUFFER_SIZE = 2047;
+		String searchBuff = "", temp = "";
+		int sequenceLocation, lastLocation = -1, MAX_READ_AMOUNT = 4000, MAX_SEARCH_BUFFER_SIZE = 2047;
 
-		HashMap<Integer, Integer> letterFrequency = new HashMap<>(); // (int)char, frequency
+		HashMap<Integer, Integer> letterFrequency = new HashMap<>(); // value, frequency
 
-        try{
-            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(sourceFile)));
-            int readValue, counter = 0;
-            while((readValue = bufferedReader.read()) != -1) {
-
-                String mystr = Integer.toBinaryString(readValue), tempnew = "";
-                for(int hz = 0; hz < 16-mystr.length(); hz++) {
-                        tempnew += "0";
-				}
-
-                tempnew += mystr;
-
-                String substring1 = tempnew.substring(0, 8);
-				String substring2 = tempnew.substring(8);
-
-				int substring1Int = Integer.parseInt(substring1, 2);
-				int substring2Int = Integer.parseInt(substring2, 2);
-
-				if (letterFrequency.get(substring1Int) == null){
-					letterFrequency.put(substring1Int, 1);
+		try {
+			InputStream inputStream = new FileInputStream(sourceFile);
+			int byteRead;
+			while ((byteRead = inputStream.read()) != -1) {
+				if (letterFrequency.get(byteRead) == null) {
+					letterFrequency.put(byteRead, 1);
 				} else {
-					letterFrequency.put(substring1Int, letterFrequency.get(substring1Int) + 1);
+					letterFrequency.put(byteRead, letterFrequency.get(byteRead) + 1);
 				}
+			}
+			inputStream.close();
 
-				if (letterFrequency.get(substring2Int) == null){
-					letterFrequency.put(substring2Int, 1);
-				} else {
-					letterFrequency.put(substring2Int, letterFrequency.get(substring2Int) + 1);
-				}
-            }
-            bufferedReader.close();
-
-        } catch(Exception exception) {
+		} catch (Exception exception) {
 			System.out.println("Error in readValue!");
 		}
 
@@ -444,10 +416,7 @@ class Huffman {
 		int n = letterFrequency.size();
 		PriorityQueue<HuffmanNode> q = new PriorityQueue<>(n, new MyComparator());
 
-		for (int key: letterFrequency.keySet()) {
-
-			// creating a Huffman node object
-			// and add it to the priority queue.
+		for (int key : letterFrequency.keySet()) {
 			HuffmanNode hn = new HuffmanNode();
 
 			hn.charValue = key;
@@ -456,55 +425,40 @@ class Huffman {
 			hn.left = null;
 			hn.right = null;
 
-			// add functions adds
-			// the huffman node to the queue.
 			q.add(hn);
 		}
 
 		HuffmanNode root = null;
 
 		while (q.size() > 1) {
-
-			// first min extract.
 			HuffmanNode x = q.peek();
 			q.poll();
 
-			// second min extract.
 			HuffmanNode y = q.peek();
 			q.poll();
 
-			// new node f which is equal
 			HuffmanNode f = new HuffmanNode();
 
-			// to the sum of the frequency of the two nodes
-			// assigning values to the f node.
 			f.frequency = x.frequency + y.frequency;
 			f.charValue = -1;
 
-			// first extracted node as left child.
 			f.left = x;
-
-			// second extracted node as the right child.
 			f.right = y;
 
-			// marking the f node as the root node.
 			root = f;
 
-			// add this node to the priority-queue.
 			q.add(f);
 		}
- 	
+
 		HashMap<Integer, String> nodeValues = new HashMap<>();  // key, bits
 
 		class Local {
 			void traverseTree(HuffmanNode root, String s) {
 				if (root.left == null && root.right == null && (root.charValue != -1)) {
-					// charValue is the (int)character in the node
 					nodeValues.put(root.charValue, s);
 					return;
 				}
-				// if left then add "0" to the code
-				// if right then add "1" to the code
+				// if left: add "0", right: add "1"
 				traverseTree(root.left, s + "0");
 				traverseTree(root.right, s + "1");
 			}
@@ -514,95 +468,34 @@ class Huffman {
 
 		System.out.println(nodeValues);
 
-		try{
-            PrintWriter printWriter = new PrintWriter(new FileWriter(resultFile));
-			BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(sourceFile)));
-			printWriter.print((char)n);
+		try {
+			OutputStream outputStream = new FileOutputStream(resultFile);
+			InputStream inputStream = new FileInputStream(sourceFile);
+			outputStream.write(n);
 
-			for (int key: nodeValues.keySet()) {
-				printWriter.print((char)key);
-			}
+			for (int key : nodeValues.keySet()) {
+				outputStream.write(key);
 
-			for (int key: nodeValues.keySet()) {
 				int bitLength = nodeValues.get(key).length();
-				printWriter.print((char)bitLength);
-			}
+				outputStream.write(bitLength);
 
-			String allBits = "";
-			int NUMBER_OF_BITS = 7;
-
-			for (int key: nodeValues.keySet()) {
-				allBits = allBits + nodeValues.get(key);
-				while (allBits.length() > NUMBER_OF_BITS-1){
-					for (int i=0; i<=NUMBER_OF_BITS-1; i+=NUMBER_OF_BITS) {
-						String bits = allBits.substring(i, i+NUMBER_OF_BITS);
-						int bitsInt = Integer.parseInt(bits, 2);
-//						System.out.println(substringInt);
-						printWriter.print((char)(bitsInt));
-					}
-					allBits = allBits.substring(NUMBER_OF_BITS);
-
-				}
-			}
-			if (!allBits.isEmpty()){
-				System.out.print(allBits.length());
+				String allBits = nodeValues.get(key);
 				int bitsInt = Integer.parseInt(allBits, 2);
-//						System.out.println(substringInt);
-				printWriter.print((char)(bitsInt));
+				outputStream.write(bitsInt);
 			}
 
-			String rawText = "";
-			int readValue;
+			int byteRead;
 
-
-			while((readValue = bufferedReader.read()) != -1)
-			{
-				String mystr = Integer.toBinaryString(readValue), tempnew = "";
-				for(int hz = 0; hz < 16-mystr.length(); hz++) {
-					tempnew += "0";
-				}
-
-				tempnew += mystr;
-
-				String substring1 = tempnew.substring(0, 8);
-				String substring2 = tempnew.substring(8);
-
-				int substring1Int = Integer.parseInt(substring1, 2);
-				int substring2Int = Integer.parseInt(substring2, 2);
-
-				rawText = rawText + nodeValues.get(substring1Int);
-				rawText = rawText + nodeValues.get(substring2Int);
-
-				if (rawText.length() > NUMBER_OF_BITS-1){
-					for (int i=0; i<=NUMBER_OF_BITS-1; i+=NUMBER_OF_BITS) {
-						String substring = rawText.substring(i, i+NUMBER_OF_BITS);
-						int substringInt = Integer.parseInt(substring, 2);
-//						System.out.println(substringInt);
-						printWriter.print((char)(substringInt));
-					}
-					rawText = rawText.substring(NUMBER_OF_BITS);
-//					printWriter.close();
-//					bufferedReader.close();
-//					return;
-				}
+			while ((byteRead = inputStream.read()) != -1) {
+				int textInt = Integer.parseInt(nodeValues.get(byteRead), 2);
+				outputStream.write(textInt);
 			}
 
-			for (int i=0; i<rawText.length(); i+=NUMBER_OF_BITS) {
- 					try{
- 						String substring = rawText.substring(i, i+NUMBER_OF_BITS);
- 						printWriter.print((char)Integer.parseInt(substring, 2));
- 					}
- 					catch (StringIndexOutOfBoundsException e) {
- 						String substring = rawText.substring(i);
- 						printWriter.print((char)Integer.parseInt(substring, 2));
- 					}
-			}
-
-            printWriter.close();
-			bufferedReader.close();
+            inputStream.close();
+			outputStream.close();
 
 		} catch(Exception exception) {
-			System.out.println("Error in printWriter!");
+			System.out.println("Error in InputOutputStream!");
 		}
 
 	}
