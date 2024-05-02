@@ -484,12 +484,24 @@ class Huffman {
 				outputStream.write(bitsInt);
 			}
 
-			int byteRead;
+			int byteRead, NUMBER_OF_BITS = 8;
+            String allBits = "";
 
 			while ((byteRead = inputStream.read()) != -1) {
-				int textInt = Integer.parseInt(nodeValues.get(byteRead), 2);
-				outputStream.write(textInt);
+                allBits += nodeValues.get(byteRead);
+                while(allBits.length() > NUMBER_OF_BITS){
+                    String substring = allBits.substring(0, NUMBER_OF_BITS);
+                    int textInt = Integer.parseInt(substring, 2);
+                    outputStream.write(textInt);
+                    allBits = allBits.substring(NUMBER_OF_BITS);
+                }
 			}
+            System.out.println("Leftover amount of bits: " + allBits.length());
+            if(!allBits.isEmpty()) {
+                int textInt = Integer.parseInt(allBits, 2);
+                outputStream.write(textInt);
+                outputStream.write(allBits.length());
+            }
 
             inputStream.close();
 			outputStream.close();
