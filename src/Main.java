@@ -1,206 +1,150 @@
-// 231RDB190 Tomass Kristiāns Šterns
-// 231RDB331 Petr Gabuniia
-// 231RDB008 Valentīns Koposovs
-
 import java.io.*;
 import java.util.*;
-// import java.io.*;
-
-/*
-	Benchmark, only LZ77 compresion, windows results:
-	Filename             original size     compresed size   compresion 
-	Tests/File1.html         80831			    39862          2.03x
-	Tests/File2.html        346119     		   150934          2.29x
-	Tests/File3.html         83535			    41239          2.03x
-	Tests/File4.html        208048			    98862          2.10x
-	__________________________________________________________________
-										   average compresion: 2.11x
-
-
-	Benchmark, only LZ77 compresion, MacOS results:
-	Filename             original size     compresed size   compresion 
-	Tests/File1.html         80479			    39790          2.02x
-	Tests/File2.html        344523     		   150593          2.29x
-	Tests/File3.html         83069			    41097          2.02x
-	Tests/File4.html        206694			    98613          2.10x
-	Tests/File5.html        123085			    60540          2.03x
-	Tests/File6.html        175131			    88181          1.99x
-	Tests/File7.html         80219			    43051          1,86x
-	__________________________________________________________________
-										   average compresion: 2.04x
-
-
-	Benchmark, Huffman compresion, MacOS results:
-	Filename             original size     compresed size   compresion 
-	Tests/File1.html         80479			    45762          1.76x
-	Tests/File2.html        344523     		   145640          2.37x
-	Tests/File3.html         83069			    45954          1.82x
-	Tests/File4.html        206694			    97614          2.12x
-	Tests/File5.html        123085			    63648          1.93x
-	Tests/File6.html        175131			    88487          1.98x
-	Tests/File7.html         80219			    47440          1,69x
-	__________________________________________________________________
-										   average compresion: 1.95x
-
-*/
-
 
 public class Main {
 
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        String choiceStr;
+        String sourceFile, resultFile, firstFile, secondFile;
 
-	public static void main(String[] args) {
-		Scanner sc = new Scanner(System.in);
-		String choiseStr;
-		String sourceFile, resultFile, firstFile, secondFile;
-		
-		loop: while (true) {
+        loop: while (true) {
 
-			System.out.println("\n>> comp - compress file");
-			System.out.println(">> decomp - decompress file");
-            System.out.println(">> Huffman - (test version)");
-			System.out.println(">> size - get file size");
-			System.out.println(">> equal - compare two files");
-			System.out.println(">> about - about authors");
-			System.out.println(">> exit - exit program");
-			
-			choiseStr = sc.next();
-			
-			switch (choiseStr) {
-				case "comp":
-				System.out.print("source file name: ");
-				sourceFile = sc.next();
-				System.out.print("archive name: ");
-				resultFile = sc.next();
+            System.out.println("\n>> comp - compress file");
+            System.out.println(">> decomp - decompress file (LZ77)");
+            System.out.println(">> Huffman - decompress file (Huffman)");
+            System.out.println(">> size - get file size");
+            System.out.println(">> equal - compare two files");
+            System.out.println(">> about - about authors");
+            System.out.println(">> exit - exit program");
 
-				LZ77 lz77_1 = new LZ77(sourceFile, resultFile);
-				lz77_1.compressFile();
-				break;
-			case "decomp":
-				System.out.print("archive name: ");
-				sourceFile = sc.next();
-				System.out.print("file name: ");
-				resultFile = sc.next();
+            choiceStr = sc.next();
 
-				LZ77 lz77_2 = new LZ77(sourceFile, resultFile);
-				lz77_2.decompressFile();
-				break;
-            case "Huffman":
-                System.out.print("archive name: ");
-                sourceFile = sc.next();
-                System.out.print("file name: ");
-                resultFile = sc.next();
+            switch (choiceStr) {
+                case "comp":
+                    System.out.print("source file name: ");
+                    sourceFile = sc.next();
+                    System.out.print("archive name: ");
+                    resultFile = sc.next();
 
-                Huffman huffman = new Huffman(sourceFile, resultFile);
-                huffman.compressFile();
-                break;
-			case "size":
-				System.out.print("file name: ");
-				sourceFile = sc.next();
-				size(sourceFile);
-				break;
-			case "equal":
-				System.out.print("first file name: ");
-				firstFile = sc.next();
-				System.out.print("second file name: ");
-				secondFile = sc.next();
-				System.out.println(equal(firstFile, secondFile));
-				break;
-			case "about":
-				about();
-				break;
-			case "exit":
-				break loop;
-			}
-		}
+                    LZ77 lz77_1 = new LZ77(sourceFile, resultFile);
+                    lz77_1.compressFile();
+                    break;
+                case "decomp":
+                    System.out.print("archive name: ");
+                    sourceFile = sc.next();
+                    System.out.print("file name: ");
+                    resultFile = sc.next();
 
-		sc.close();
-	}
-	
-	public static void size(String sourceFile) {
-		try {
-			FileInputStream f = new FileInputStream(sourceFile);
-			System.out.println("size: " + f.available());
-			f.close();
-		}
-		catch (IOException ex) {
-			System.out.println(ex.getMessage());
-		}
-		
-	}
-	
-	public static boolean equal(String firstFile, String secondFile) {
-		try {
-			FileInputStream f1 = new FileInputStream(firstFile);
-			FileInputStream f2 = new FileInputStream(secondFile);
-			int k1, k2;
-			byte[] buf1 = new byte[1000];
-			byte[] buf2 = new byte[1000];
-			do {
-				k1 = f1.read(buf1);
-				k2 = f2.read(buf2);
-				if (k1 != k2) {
-					f1.close();
-					f2.close();
-					return false;
-				}
-				for (int i=0; i<k1; i++) {
-					if (buf1[i] != buf2[i]) {
-						f1.close();
-						f2.close();
-						return false;
-					}
-						
-				}
-			} while (!(k1 == -1 && k2 == -1));
-			f1.close();
-			f2.close();
-			return true;
-		}
-		catch (IOException ex) {
-			System.out.println(ex.getMessage());
-			return false;
-		}
-	}
-	
-	public static void about() {
-		System.out.println("231RDB190 Tomass Kristiāns Šterns");
-		System.out.println("231RDB331 Petr Gabuniia");
-		System.out.println("231RDB008 Valentīns Koposovs");
-	}
+                    LZ77 lz77_2 = new LZ77(sourceFile, resultFile);
+                    lz77_2.decompressFile();
+                    break;
+                case "Hcomp":
+                    System.out.print("archive name: ");
+                    sourceFile = sc.next();
+                    System.out.print("file name: ");
+                    resultFile = sc.next();
+
+                    Huffman huffman_1 = new Huffman(sourceFile, resultFile);
+                    huffman_1.compressFile();
+                    break;
+
+				case "Hdecomp":
+                    System.out.print("archive name: ");
+                    sourceFile = sc.next();
+                    System.out.print("file name: ");
+                    resultFile = sc.next();
+
+                    Huffman huffman_2 = new Huffman(sourceFile, resultFile);
+                    huffman_2.decompressFile();
+                    break;
+                case "size":
+                    System.out.print("file name: ");
+                    sourceFile = sc.next();
+                    size(sourceFile);
+                    break;
+                case "equal":
+                    System.out.print("first file name: ");
+                    firstFile = sc.next();
+                    System.out.print("second file name: ");
+                    secondFile = sc.next();
+                    System.out.println(equal(firstFile, secondFile));
+                    break;
+                case "about":
+                    about();
+                    break;
+                case "exit":
+                    break loop;
+                default:
+                    System.out.println("Invalid choice!");
+                    break;
+            }
+        }
+
+        sc.close();
+    }
+
+    public static void size(String sourceFile) {
+        try {
+            FileInputStream f = new FileInputStream(sourceFile);
+            System.out.println("size: " + f.available());
+            f.close();
+        } catch (IOException ex) {
+            System.out.println(ex.getMessage());
+        }
+    }
+
+    public static boolean equal(String firstFile, String secondFile) {
+        try {
+            FileInputStream f1 = new FileInputStream(firstFile);
+            FileInputStream f2 = new FileInputStream(secondFile);
+            int k1, k2;
+            byte[] buf1 = new byte[1000];
+            byte[] buf2 = new byte[1000];
+            do {
+                k1 = f1.read(buf1);
+                k2 = f2.read(buf2);
+                if (k1 != k2) {
+                    f1.close();
+                    f2.close();
+                    return false;
+                }
+                for (int i = 0; i < k1; i++) {
+                    if (buf1[i] != buf2[i]) {
+                        f1.close();
+                        f2.close();
+                        return false;
+                    }
+
+                }
+            } while (!(k1 == -1 && k2 == -1));
+            f1.close();
+            f2.close();
+            return true;
+        } catch (IOException ex) {
+            System.out.println(ex.getMessage());
+            return false;
+        }
+    }
+
+    public static void about() {
+        System.out.println("231RDB190 Tomass Kristiāns Šterns");
+        System.out.println("231RDB331 Petr Gabuniia");
+        System.out.println("231RDB008 Valentīns Koposovs");
+    }
 }
 
-/**		Comresses original file using LZ77 algorythm idea
- *		Read ahead and search buffer are set to 65535 for efficiency
- *
- *		Result file consists of sequences of 3 characters:
- *			how many charaters back in search buffer is the beginning of sequence of characters,
- *			the length of the sequence of character,
- *			and the next character after this sequence
- *
- *		The algorythm works as follows:
- *			It reads in characters from the file until the read ahead buffer is filled (65535 characters) or till the end of the file
- *			Then it reads the character from read ahead buffer and adds it to string
- *			It then looks if such string exists in search buffer:
- *				if it does, it reads next character from read ahead buffer and if exists in search buffer check is repeated
- *				if not - it saves the data explained previous section in result file
- *
- *			It then adds the string to search buffer
- *			If search buffer is bigger than 65535 by the end of previous action:
- *				it removes the the oldest characters put in it until it is 65535 in size
- *			This action is continued until the end of the file or till the read ahead buffer is empty
- */
-
 class LZ77 {
-	String sourceFile;
-	String resultFile;
+    String sourceFile;
+    String resultFile;
 
-	LZ77(String sourceFile, String resultFile) {
-		this.sourceFile = sourceFile;
-		this.resultFile = resultFile;
-	}
+    LZ77(String sourceFile, String resultFile) {
+        this.sourceFile = sourceFile;
+        this.resultFile = resultFile;
+    }
 
-	void compressFile() {
-		File file = new File(sourceFile);
+    void compressFile() {
+        File file = new File(sourceFile);
             if(!file.exists()) {
 				System.out.println("File not found!");
 				return;
@@ -315,10 +259,10 @@ class LZ77 {
                 printWriter.close();
             }
             catch(Exception exception) {System.out.println("Error in either readValue or file opening!");}
-	}
+    }
 
-	void decompressFile() {
-		File file = new File(sourceFile);
+    void decompressFile() {
+        File file = new File(sourceFile);
 		if(!file.exists()) {return;}
 
 		String rawText = "", temp = "";
@@ -362,27 +306,20 @@ class LZ77 {
 		}
 		catch(Exception exception) {System.out.println("Error in either readValue or file opening!");}
 	}
-}
+    }
+
 
 class Huffman {
-	String sourceFile;
-	String resultFile;
+    String sourceFile;
+    String resultFile;
 
-	Huffman(String sourceFile, String resultFile) {
-		this.sourceFile = sourceFile;
-		this.resultFile = resultFile;
-	}
+    Huffman(String sourceFile, String resultFile) {
+        this.sourceFile = sourceFile;
+        this.resultFile = resultFile;
+    }
 
-	/**
-	 *   Compresses LZ77 compressed file.
-	 *   In final file writes symbols in following sequence:
-	 *   	* 1 number n, represents number of different symbols in LZ77 compressed file
-	 *   	* n triplets (value, bit length, prefix: base 2 converted to base 10)
-
-	 *      * byteRead of bytes using @param sourceFile
-	 *      * written in @param resultFile
-	 */
-	void compressFile() {
+    void compressFile() {
+        
 		File file = new File(sourceFile);
 		if (!file.exists()) {
 			System.out.println("File not found!");
@@ -510,11 +447,77 @@ class Huffman {
 			System.out.println("Error in InputOutputStream!");
 		}
 
-	}
 
 
-	void decompressFile(){}
+
+    }
+
+	void decompressFile() {
+    try {
+        FileInputStream inputStream = new FileInputStream(sourceFile);
+        FileOutputStream outputStream = new FileOutputStream(resultFile);
+
+        int n = inputStream.read();
+        if (n == -1) {
+            throw new IOException("Error 1");
+        }
+
+        HashMap<Integer, String> nodeValues = new HashMap<>();
+        for (int i = 0; i < n; i++) {
+            int key = inputStream.read();
+            int count = inputStream.read();
+            if (key == -1 || count == -1) {
+                throw new IOException("Error 2");
+            }
+            int byteRead = inputStream.read();
+            if (byteRead == -1) {
+                throw new IOException("Error 3");
+            }
+            StringBuilder value = new StringBuilder(Integer.toBinaryString(byteRead & 0xFF));
+            if (value.length() > count) {
+                value = new StringBuilder(value.substring(value.length() - count)); 
+            } else {
+                while (value.length() < count) {
+                    value.insert(0, "0"); 
+                }
+            }
+            nodeValues.put(key, value.toString());
+        }
+
+        StringBuilder bitSequence = new StringBuilder();
+        int byteRead;
+        while ((byteRead = inputStream.read()) != -1) {
+            String bits = String.format("%8s", Integer.toBinaryString(byteRead & 0xFF)).replace(' ', '0');
+            bitSequence.append(bits.substring(1)); 
+        }
+
+        StringBuilder decompressedText = new StringBuilder();
+        StringBuilder currentBits = new StringBuilder();
+        for (int i = 0; i < bitSequence.length(); i++) {
+            currentBits.append(bitSequence.charAt(i));
+            for (int key : nodeValues.keySet()) {
+                String huffmanCode = nodeValues.get(key);
+                if (currentBits.toString().equals(huffmanCode)) {
+                    decompressedText.append((char) key);
+                    currentBits.setLength(0);
+                    break;
+                }
+            }
+            
+        }
+
+        outputStream.write(decompressedText.toString().getBytes());
+        inputStream.close();
+        outputStream.close();
+
+        System.out.println("Decompression completed successfully.");
+    } catch (IOException e) {
+        System.out.println("Error: " + e.getMessage());
+    }
 }
+
+	
+}	
 
 class HuffmanNode { 
 	int frequency;  //
