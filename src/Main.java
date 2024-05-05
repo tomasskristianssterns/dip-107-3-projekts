@@ -11,9 +11,7 @@ public class Main {
         loop: while (true) {
 
             System.out.println("\n>> comp - compress file");
-            System.out.println(">> decomp - decompress file (LZ77)");
-			System.out.println(">> Hcomp - compress file (Huffman)");
-            System.out.println(">> Hdecomp decompress file (Huffman)");
+            System.out.println(">> decomp - decompress file");
             System.out.println(">> size - get file size");
             System.out.println(">> equal - compare two files");
             System.out.println(">> about - about authors");
@@ -28,8 +26,18 @@ public class Main {
                     System.out.print("archive name: ");
                     resultFile = sc.next();
 
-                    LZ77 lz77_1 = new LZ77(sourceFile, resultFile);
+                    String tempCompFile = resultFile + ".pog";
+
+                    System.out.println("Compressing file, please wait...");
+
+                    LZ77 lz77_1 = new LZ77(sourceFile, tempCompFile);
                     lz77_1.compressFile();
+
+                    Huffman huffman_1 = new Huffman(tempCompFile, resultFile);
+                    huffman_1.compressFile();
+
+                    System.out.println("Compressing done");
+
                     break;
                 case "decomp":
                     System.out.print("archive name: ");
@@ -37,27 +45,17 @@ public class Main {
                     System.out.print("file name: ");
                     resultFile = sc.next();
 
-                    LZ77 lz77_2 = new LZ77(sourceFile, resultFile);
-                    lz77_2.decompressFile();
-                    break;
-                case "Hcomp":
-                    System.out.print("archive name: ");
-                    sourceFile = sc.next();
-                    System.out.print("file name: ");
-                    resultFile = sc.next();
+                    String tempDecompFile = resultFile + ".pog";
 
-                    Huffman huffman_1 = new Huffman(sourceFile, resultFile);
-                    huffman_1.compressFile();
-                    break;
+                    System.out.println("Decompressing file, please wait...");
 
-				case "Hdecomp":
-                    System.out.print("archive name: ");
-                    sourceFile = sc.next();
-                    System.out.print("file name: ");
-                    resultFile = sc.next();
-
-                    Huffman huffman_2 = new Huffman(sourceFile, resultFile);
+                    Huffman huffman_2 = new Huffman(sourceFile, tempDecompFile);
                     huffman_2.decompressFile();
+
+                    LZ77 lz77_2 = new LZ77(tempDecompFile, resultFile);
+                    lz77_2.decompressFile();
+
+                    System.out.println("Decompression completed successfully.");
                     break;
                 case "size":
                     System.out.print("file name: ");
@@ -304,6 +302,9 @@ class LZ77 {
 			}
 			bufferedReader.close();
 			printWriter.close();
+
+            File tempFile = new File(sourceFile);
+            tempFile.delete();
 		}
 		catch(Exception exception) {System.out.println("Error in either readValue or file opening!");}
 	}
@@ -327,9 +328,6 @@ class Huffman {
 			return;
 		}
 
-		String searchBuff = "", temp = "";
-		int sequenceLocation, lastLocation = -1, MAX_READ_AMOUNT = 4000, MAX_SEARCH_BUFFER_SIZE = 2047;
-
 		HashMap<Integer, Integer> letterFrequency = new HashMap<>(); // value, frequency
 
 		try {
@@ -347,9 +345,6 @@ class Huffman {
 		} catch (Exception exception) {
 			System.out.println("Error in readValue!");
 		}
-
-		System.out.println("Size of map is: " + letterFrequency.size());
-		System.out.println(letterFrequency);
 
 		int n = letterFrequency.size();
 		PriorityQueue<HuffmanNode> q = new PriorityQueue<>(n, new MyComparator());
@@ -404,8 +399,6 @@ class Huffman {
 
 		new Local().traverseTree(root, "");
 
-		System.out.println(nodeValues);
-
 		try {
 			OutputStream outputStream = new FileOutputStream(resultFile);
 			InputStream inputStream = new FileInputStream(sourceFile);
@@ -434,9 +427,7 @@ class Huffman {
                 }
             }
 
-            System.out.println("Leftover bits: " + writingBits.length());
-
-            for (int i = writingBits.length(); i<= NUMBER_OF_BITS; i++){
+            for (int i = writingBits.length(); i < NUMBER_OF_BITS; i++){
                 writingBits += "0";
             }
             outputStream.write(Integer.parseInt(writingBits, 2));
@@ -453,7 +444,6 @@ class Huffman {
                     allBits = allBits.substring(NUMBER_OF_BITS);
                 }
 			}
-            System.out.println("Leftover amount of bits: " + allBits.length());
             if(!allBits.isEmpty()) {
                 int textInt = Integer.parseInt(allBits, 2);
                 outputStream.write(textInt);
@@ -463,10 +453,12 @@ class Huffman {
             inputStream.close();
 			outputStream.close();
 
+            File tempFile = new File(sourceFile);
+            tempFile.delete();
+
 		} catch(Exception exception) {
 			System.out.println("Error in InputOutputStream!");
 		}
-
     }
 
 	void decompressFile() {
@@ -486,64 +478,88 @@ class Huffman {
 			if (n == -1) {
 				throw new IOException("Error1");
 			}
+
+            int[] keys = new int[n];
 	
 			for (int i = 0; i < n; i++) {
 				int key = inputStream.read();
-				int count = inputStream.read();
-				if (key == -1 || count == -1) {
-					throw new IOException("Error2");
-				}
-				int byteRead = inputStream.read(); 
-				if (byteRead == -1) {
-					throw new IOException("Error3");
-				}
-				StringBuilder value = new StringBuilder(Integer.toBinaryString(byteRead & 0xFF));
-				if (value.length() > count) {
-					value = new StringBuilder(value.substring(value.length() - count));
-				} else {
-					while (value.length() < count) {
-						value.insert(0, "0");
-					}
-				}
-				nodeValues.put(value.toString(), key);
+                keys[i] = key;
 			}
+
+            int[] bitCounts = new int[n];
+            int bitCountSum = 0;
+
+            for (int i = 0; i < n; i++) {
+                int count = inputStream.read();
+                bitCounts[i] = count;
+                bitCountSum += count;
+            }
 	
-			int bitCountSum = 0;
-			for (int i = 0; i < n; i++) {
-				int bitCount = inputStream.read();
-				if (bitCount == -1) {
-					throw new IOException("Error4");
-				}
-				bitCountSum += bitCount;
-			}
-	
-			int bytesToRead = (bitCountSum + 7) / 8;
-			byte[] bitBuffer = new byte[bytesToRead];
-			if (inputStream.read(bitBuffer) != bytesToRead) {
-				throw new IOException("Error5");
-			}
-	
-			StringBuilder allBits = new StringBuilder();
-			for (byte b : bitBuffer) {
-				allBits.append(String.format("%8s", Integer.toBinaryString(b & 0xFF)).replace(' ', '0'));
-			}
-	
-			
-			String currentBits = "";
-			for (int i = 0; i < allBits.length(); i++) {
-				currentBits += allBits.charAt(i);
-				if (nodeValues.containsKey(currentBits)) {
-					int key = nodeValues.get(currentBits);
-					outputStream.write(key);
-					System.out.print((char) key);
-					currentBits = "";
-				}
-			}
+			int bytesToRead = (bitCountSum + 7) / 8; // ceil(bitCountSum/8) --> bytes
+
+            int counter = 0;
+            String allBits = "", currentBitsText = "";
+            for (int i = 0; i < bytesToRead; i++) {
+                int oneByte = inputStream.read();
+                currentBitsText = String.format("%8s", Integer.toBinaryString(oneByte & 0xFF)).replace(' ', '0');
+                allBits += currentBitsText;
+
+                while (allBits.length() >= bitCounts[counter]) {
+                    String prefix = allBits.substring(0, bitCounts[counter]);
+                    allBits = allBits.substring(bitCounts[counter]);
+                    nodeValues.put(prefix, keys[counter]);
+                    counter++;
+                    if (counter == n) {
+                        break;
+                    }
+                }
+
+
+            }
+
+            int byteRead, lastReadByte = -1, secondToLast = -1;
+            String lastBitsText = "", secondToLastText = "", thirdToLastText = "";
+            currentBitsText = "";
+
+
+            while(true) {
+               for (int i = 0; i < thirdToLastText.length(); i++) {
+                    currentBitsText += thirdToLastText.charAt(i);
+                    if (nodeValues.containsKey(currentBitsText)) {
+                        int key = nodeValues.get(currentBitsText);
+                        outputStream.write(key);
+                        currentBitsText = "";
+                    }
+                }
+
+                byteRead = inputStream.read();
+
+                if (byteRead == -1) {
+                    secondToLastText = String.format("%8s", Integer.toBinaryString(secondToLast & 0xFF)).replace(' ', '0');
+                    secondToLastText = secondToLastText.substring(8-lastReadByte);
+                    lastBitsText = secondToLastText;
+
+                    for (int i = 0; i < lastBitsText.length(); i++) {
+                        currentBitsText += lastBitsText.charAt(i);
+                        if (nodeValues.containsKey(currentBitsText)) {
+                            int key = nodeValues.get(currentBitsText);
+                            outputStream.write(key);
+                            currentBitsText = "";
+                        }
+                    }
+
+                    break;
+                }
+                thirdToLastText = secondToLastText;
+                secondToLastText = lastBitsText;
+                lastBitsText = String.format("%8s", Integer.toBinaryString(byteRead & 0xFF)).replace(' ', '0');
+
+                secondToLast = lastReadByte;
+                lastReadByte = byteRead;
+            }
 	
 			inputStream.close();
 			outputStream.close();
-	
-			System.out.println("Decompression completed successfully.");
 		} catch (IOException e) {
 			System.out.println("Error: " + e.getMessage());
 		}
