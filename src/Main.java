@@ -475,28 +475,27 @@ class Huffman {
 			System.out.println("File not found!");
 			return;
 		}
-
-        HashMap<String, Integer> nodeValues = new HashMap<>(); // Prefix, key
-
+	
+		HashMap<String, Integer> nodeValues = new HashMap<>(); 
+	
 		try {
 			InputStream inputStream = new FileInputStream(sourceFile);
 			OutputStream outputStream = new FileOutputStream(resultFile);
-
+	
 			int n = inputStream.read();
 			if (n == -1) {
-				throw new IOException("Error 1");
+				throw new IOException("Error1");
 			}
-
-
+	
 			for (int i = 0; i < n; i++) {
 				int key = inputStream.read();
 				int count = inputStream.read();
 				if (key == -1 || count == -1) {
-					throw new IOException("Error 2");
+					throw new IOException("Error2");
 				}
-				int byteRead = inputStream.read(); // TODO this doesnt work for count > 8, fix changes in Huffman.compressFile()
+				int byteRead = inputStream.read(); 
 				if (byteRead == -1) {
-					throw new IOException("Error 3");
+					throw new IOException("Error3");
 				}
 				StringBuilder value = new StringBuilder(Integer.toBinaryString(byteRead & 0xFF));
 				if (value.length() > count) {
@@ -508,36 +507,48 @@ class Huffman {
 				}
 				nodeValues.put(value.toString(), key);
 			}
-
-			int byteRead;
-            String allBits = "", currentBits = "";
-			while ((byteRead = inputStream.read()) != -1) {
-                String binaryNumber = String.format("%8s", Integer.toBinaryString(byteRead & 0xFF));
-                binaryNumber = binaryNumber.replace(' ', '0');;
-                allBits += binaryNumber;
-                for (int i = 0; i < allBits.length(); i++) {
-                    currentBits += allBits.charAt(i);
-                    if (nodeValues.get(currentBits) != null) {
-                        int key = nodeValues.get(currentBits);
-                        outputStream.write(key);
-                        currentBits = "";
-                        allBits = allBits.substring(i+1);
-                        i = -1;
-                        if (allBits.length() < 8) {
-                            break;
-                        }
-                    }
-                }
-            }
-
+	
+			int bitCountSum = 0;
+			for (int i = 0; i < n; i++) {
+				int bitCount = inputStream.read();
+				if (bitCount == -1) {
+					throw new IOException("Error4");
+				}
+				bitCountSum += bitCount;
+			}
+	
+			int bytesToRead = (bitCountSum + 7) / 8;
+			byte[] bitBuffer = new byte[bytesToRead];
+			if (inputStream.read(bitBuffer) != bytesToRead) {
+				throw new IOException("Error5");
+			}
+	
+			StringBuilder allBits = new StringBuilder();
+			for (byte b : bitBuffer) {
+				allBits.append(String.format("%8s", Integer.toBinaryString(b & 0xFF)).replace(' ', '0'));
+			}
+	
+			
+			String currentBits = "";
+			for (int i = 0; i < allBits.length(); i++) {
+				currentBits += allBits.charAt(i);
+				if (nodeValues.containsKey(currentBits)) {
+					int key = nodeValues.get(currentBits);
+					outputStream.write(key);
+					System.out.print((char) key);
+					currentBits = "";
+				}
+			}
+	
 			inputStream.close();
 			outputStream.close();
-
+	
 			System.out.println("Decompression completed successfully.");
 		} catch (IOException e) {
 			System.out.println("Error: " + e.getMessage());
 		}
 	}
+	
 }	
 
 class HuffmanNode { 
