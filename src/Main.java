@@ -36,8 +36,6 @@ public class Main {
                     Huffman huffman_1 = new Huffman(tempCompFile, resultFile);
                     huffman_1.compressFile();
 
-                    System.out.println("Compressing done");
-
                     break;
                 case "decomp":
                     System.out.print("archive name: ");
@@ -55,7 +53,6 @@ public class Main {
                     LZ77 lz77_2 = new LZ77(tempDecompFile, resultFile);
                     lz77_2.decompressFile();
 
-                    System.out.println("Decompression completed successfully.");
                     break;
                 case "size":
                     System.out.print("file name: ");
@@ -307,7 +304,10 @@ class LZ77 {
             tempFile.delete();
 		}
 		catch(Exception exception) {System.out.println("Error in either readValue or file opening!");}
+
+        System.out.println("Decompression completed successfully.");
 	}
+
     }
 
 
@@ -459,6 +459,7 @@ class Huffman {
 		} catch(Exception exception) {
 			System.out.println("Error in InputOutputStream!");
 		}
+        System.out.println("Compression completed successfully.");
     }
 
 	void decompressFile() {
