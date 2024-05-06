@@ -1,3 +1,7 @@
+// 231RDB190 Tomass Kristiāns Šterns
+// 231RDB331 Petr Gabuniia
+// 231RDB008 Valentīns Koposovs
+
 import java.io.*;
 import java.util.*;
 
