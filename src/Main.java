@@ -150,7 +150,7 @@ class LZ77 {
 			}
 
             String rawText = "", searchBuff = "", temp = "";
-            int sequenceLocation, lastLocation = -1, MAX_READ_AMOUNT = 65535, MAX_SEARCH_BUFFER_SIZE = 65535; //old READ = 4000, old SEARCH = 2047
+            int sequenceLocation, lastLocation = -1, MAX_READ_AMOUNT = 55000, MAX_SEARCH_BUFFER_SIZE = 55000;
 
 		try {
                 PrintWriter printWriter = new PrintWriter(new FileWriter(resultFile));
@@ -265,7 +265,7 @@ class LZ77 {
 		if(!file.exists()) {return;}
 
 		String rawText = "", temp = "";
-		int distance, amount, MAX_READ_AMOUNT = 3, MAX_SEARCH_BUFFER_SIZE = 65535;
+		int distance, amount, MAX_READ_AMOUNT = 3, MAX_SEARCH_BUFFER_SIZE = 55000;
 
 		try
 		{
